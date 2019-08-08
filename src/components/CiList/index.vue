@@ -1,22 +1,25 @@
 <template>
   <div class="cinema_body">
-    <ul>
-      <li v-for="item in cinemaList" :key="item.id">
-        <div>
-          <span>{{ item.nm }}</span>
-          <span class="q">
-            <span class="price">{{ item.sellPrice}}</span>元起
-          </span>
-        </div>
-        <div class="address">
-          <span>{{ item.addr }}</span>
-          <span>{{ item.distance }}</span>
-        </div>
-        <div class="card">
-          <div v-for="(num,key) in item.tag" :key="key" v-if="num === 1" :class=" key | classCard ">{{ key | formatCard }}</div>
-        </div>
-      </li>
-    </ul>
+    <Loading v-if="isLoading" />
+    <Scroller v-else>
+      <ul>
+        <li v-for="item in cinemaList" :key="item.id">
+          <div>
+            <span>{{ item.nm }}</span>
+            <span class="q">
+              <span class="price">{{ item.sellPrice}}</span>元起
+            </span>
+          </div>
+          <div class="address">
+            <span>{{ item.addr }}</span>
+            <span>{{ item.distance }}</span>
+          </div>
+          <div class="card">
+            <div v-for="(num,key) in item.tag" :key="key" v-if="num === 1" :class=" key | classCard ">{{ key | formatCard }}</div>
+          </div>
+        </li>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
@@ -25,14 +28,20 @@ export default {
   name : 'CiList',
   data(){
     return {
-      cinemaList : []
+      cinemaList : [],
+      isLoading : true,
+      prevCityId : -1
     }
   },
-  mounted(){
-    this.axios.get('/api/cinemaList?cityId=10').then((res)=>{
+  activated(){
+    var cityId = this.$store.state.city.id;
+    if(this.prevCityId === cityId){return;}
+    this.axios.get('/api/cinemaList?cityId='+cityId).then((res)=>{
       var msg = res.data.msg;
       if(msg === 'ok'){
         this.cinemaList = res.data.data.cinemas;
+        this.isLoading = false;
+        this.prevCityId = cityId;
       }
     })
   },
